@@ -1,0 +1,147 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+exec > >(tee /var/log/user-data.log | logger -t user-data -s 2>/dev/console) 2>&1
+
+DOMAIN_NAME="${domain_name}"
+REPO_URL="${repo_url}"
+
+EIGENT_DIR="/opt/eigent"
+EIGENT_USER="ubuntu"
+WEB_ROOT="/var/www/letsencrypt"
+
+retry() {
+  max_attempts="$1"
+  shift
+  attempt=1
+  while true; do
+    if "$@"; then
+      return 0
+    fi
+    if [ "$attempt" -ge "$max_attempts" ]; then
+      return 1
+    fi
+    attempt=$((attempt + 1))
+    sleep 5
+  done
+}
+
+echo "==> Updating apt cache"
+retry 10 apt-get update -y
+
+echo "==> Installing base packages (git, nginx, jq, ca-certificates, curl, certbot)"
+retry 10 apt-get install -y git nginx jq ca-certificates curl certbot python3-certbot-nginx
+
+echo "==> Adding Docker official apt repository"
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+
+cat >/etc/apt/sources.list.d/docker.sources <<'EOF'
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: jammy
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+echo "==> Installing Docker engine, CLI, containerd, buildx and compose plugin"
+retry 10 apt-get update -y
+retry 10 apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+echo "==> Enabling services"
+systemctl enable --now docker
+systemctl enable --now nginx
+
+echo "==> Installing Node.js (20.x)"
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+retry 10 apt-get install -y nodejs
+
+echo "==> Cloning Eigent"
+if [[ ! -d "$EIGENT_DIR" ]]; then
+  mkdir -p "$EIGENT_DIR"
+  chown "$EIGENT_USER:$EIGENT_USER" "$EIGENT_DIR"
+  sudo -u "$EIGENT_USER" git clone "$REPO_URL" "$EIGENT_DIR"
+fi
+
+echo "==> Starting backend (Docker Compose)"
+cd "$EIGENT_DIR/server"
+if [[ ! -f .env ]]; then
+  cp .env.example .env
+fi
+docker compose up --build -d
+
+echo "==> Building frontend"
+cd "$EIGENT_DIR"
+
+cat > .env.production <<EOF
+VITE_BASE_URL=/api
+VITE_USE_LOCAL_PROXY=true
+VITE_PROXY_URL=http://localhost:3001
+EOF
+
+if [[ -f package-lock.json || -f npm-shrinkwrap.json ]]; then
+  sudo -u "$EIGENT_USER" npm ci
+else
+  sudo -u "$EIGENT_USER" npm install
+fi
+sudo -u "$EIGENT_USER" npm run build
+
+echo "==> Configuring Nginx"
+mkdir -p "$WEB_ROOT"
+chown -R www-data:www-data "$WEB_ROOT"
+
+cat > /etc/nginx/conf.d/eigent.conf <<EOF
+server {
+  listen 80;
+  listen [::]:80;
+
+  server_name $DOMAIN_NAME;
+
+  location ^~ /.well-known/acme-challenge/ {
+    root /var/www/letsencrypt;
+  }
+
+  location /api/ {
+    proxy_pass http://127.0.0.1:3001/;
+    proxy_http_version 1.1;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection "upgrade";
+  }
+
+  location / {
+    root /opt/eigent/dist;
+    try_files \$uri \$uri/ /index.html;
+  }
+}
+EOF
+
+nginx -t
+systemctl reload nginx
+
+echo "==> Waiting for DNS to point to this instance"
+INSTANCE_PUBLIC_IP="$(curl -fsS http://169.254.169.254/latest/meta-data/public-ipv4 || true)"
+if [[ -n "$INSTANCE_PUBLIC_IP" ]]; then
+  for _ in $(seq 1 60); do
+    RESOLVED_IP="$(getent ahostsv4 "$DOMAIN_NAME" | awk 'NR==1{print $1}' || true)"
+    if [[ "$RESOLVED_IP" == "$INSTANCE_PUBLIC_IP" ]]; then
+      break
+    fi
+    sleep 10
+  done
+fi
+
+echo "==> Issuing TLS certificate (Let's Encrypt)"
+retry 5 certbot --nginx -n --agree-tos --redirect \
+  -m "admin@$DOMAIN_NAME" \
+  -d "$DOMAIN_NAME"
+
+echo "==> Enabling cert renewal timer"
+systemctl enable --now certbot-renew.timer || true
+
+echo "==> Done"
+
