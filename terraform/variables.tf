@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "instance_type" {
   description = "EC2 instance type."
   type        = string
-  default     = "t3.large"
+  default     = "t3.medium"
 }
 
 variable "subnet_id" {
@@ -19,7 +19,7 @@ variable "subnet_id" {
 variable "domain_name" {
   description = "Public FQDN for Eigent (used for TLS cert issuance)."
   type        = string
-  default     = "ai1.steamocloud.com"
+  default     = "ai.steamocloud.com"
 }
 
 variable "ssh_key_name" {
@@ -49,7 +49,7 @@ variable "route53_zone_id" {
 variable "existing_eip_public_ip" {
   description = "Existing Elastic IP public IPv4 to associate to the instance by default."
   type        = string
-  default     = "100.24.222.53"
+  default     = "44.218.150.69"
 }
 
 variable "allocate_new_eip" {
@@ -61,7 +61,7 @@ variable "allocate_new_eip" {
 variable "eip_allocation_id" {
   description = "Optional explicit EIP allocation ID override. If set, it takes precedence over existing_eip_public_ip."
   type        = string
-  default     = null
+  default     = "eipalloc-05ef7b283a2f48a1b"
 }
 
 variable "repo_url" {

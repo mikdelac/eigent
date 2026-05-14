@@ -107,6 +107,10 @@ resource "aws_instance" "eigent" {
   tags = {
     Name = "eigent"
   }
+
+  lifecycle {
+    ignore_changes = [user_data, ami]
+  }
 }
 
 resource "aws_eip" "eigent" {
@@ -125,8 +129,9 @@ data "aws_eip" "existing" {
 }
 
 resource "aws_eip_association" "eigent" {
-  instance_id   = aws_instance.eigent.id
-  allocation_id = local.uses_existing_eip ? data.aws_eip.existing[0].id : aws_eip.eigent[0].id
+  instance_id          = aws_instance.eigent.id
+  allocation_id        = local.uses_existing_eip ? data.aws_eip.existing[0].id : aws_eip.eigent[0].id
+  allow_reassociation  = true
 }
 
 resource "aws_route53_record" "eigent" {
