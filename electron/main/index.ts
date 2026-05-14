@@ -50,11 +50,7 @@ import {
   getInstallationStatus,
   PromiseReturnType,
 } from './install-deps';
-import {
-  setRoundedCorners,
-  setTransparentTitlebar,
-  setVibrancy,
-} from './native/macos-window';
+import { setRoundedCorners } from './native/macos-window';
 import { registerUpdateIpcHandlers, update } from './update';
 import {
   getEmailFolderPath,
@@ -103,6 +99,7 @@ interface CdpBrowser {
   addedAt: number;
 }
 let cdp_browser_pool: CdpBrowser[] = [];
+let cdpLastAssignedPort = 9223; // tracks the highest port ever assigned, never decreases
 let cdpHealthCheckTimer: ReturnType<typeof setInterval> | null = null;
 
 const CDP_POOL_FILE = path.join(os.homedir(), '.eigent', 'cdp-browsers.json');
@@ -125,8 +122,12 @@ function loadCdpPool(): void {
         ...b,
         isExternal: true,
       }));
+      cdpLastAssignedPort = cdp_browser_pool.reduce(
+        (max, b) => Math.max(max, b.port),
+        cdpLastAssignedPort
+      );
       log.info(
-        `[CDP POOL] Loaded ${cdp_browser_pool.length} browser(s) from disk`
+        `[CDP POOL] Loaded ${cdp_browser_pool.length} browser(s) from disk, lastAssignedPort=${cdpLastAssignedPort}`
       );
     }
   } catch (e) {
@@ -763,16 +764,25 @@ function registerIpcHandlers() {
   // Launch CDP browser with automatic port assignment
   ipcMain.handle('launch-cdp-browser', async () => {
     try {
-      // 1. Find available port (9224–9300) by checking no CDP browser is listening
+      // 1. Always increment port from the last assigned port
       // Port 9223 is reserved for the login browser
       let port: number | null = null;
-      for (let p = 9224; p < 9300; p++) {
-        if (
-          !cdp_browser_pool.some((b) => b.port === p) &&
-          !(await isCdpPortAlive(p))
-        ) {
+      for (let p = cdpLastAssignedPort + 1; p < 9300; p++) {
+        if (!(await isCdpPortAlive(p))) {
           port = p;
           break;
+        }
+      }
+      // Wrap around if we hit the ceiling
+      if (port === null) {
+        for (let p = 9224; p <= cdpLastAssignedPort && p < 9300; p++) {
+          if (
+            !cdp_browser_pool.some((b) => b.port === p) &&
+            !(await isCdpPortAlive(p))
+          ) {
+            port = p;
+            break;
+          }
         }
       }
       if (port === null) {
@@ -909,6 +919,7 @@ function registerIpcHandlers() {
         addedAt: Date.now(),
       };
       cdp_browser_pool.push(newBrowser);
+      cdpLastAssignedPort = port;
       saveCdpPool();
       notifyCdpPoolChanged();
 
@@ -1819,7 +1830,6 @@ function registerIpcHandlers() {
 
       // Read file content
       const fileContent = await fsp.readFile(filePath);
-      log.info('File read successfully:', filePath);
 
       return {
         success: true,
@@ -2741,8 +2751,7 @@ async function createWindow() {
   );
 
   // Platform-specific window configuration
-  // Windows: Use native frame for better native feel, solid background
-  // macOS: Use frameless with transparency and vibrancy effects
+  // Windows: native frame and solid background. macOS/Linux: frameless; macOS corner radius via native hook.
   win = new BrowserWindow({
     title: 'Eigent',
     width: 1200,
@@ -2754,12 +2763,16 @@ async function createWindow() {
     show: false, // Don't show until content is ready to avoid white screen
     // Only use transparency on macOS and Linux (not supported well on Windows)
     transparent: !isWindows,
-    // Solid background on Windows (respect dark/light mode), fully transparent on macOS for native vibrancy
+    // Solid on Windows; macOS solid without vibrancy; Linux unchanged semi-transparent tint
     backgroundColor: isWindows
       ? nativeTheme.shouldUseDarkColors
         ? '#1e1e1e'
         : '#ffffff'
-      : '#00000000',
+      : isMac
+        ? nativeTheme.shouldUseDarkColors
+          ? '#1e1e1e'
+          : '#f5f5f5'
+        : '#f5f5f580',
     // macOS-specific title bar styling
     titleBarStyle: isMac ? 'hidden' : undefined,
     trafficLightPosition: isMac ? { x: 10, y: 10 } : undefined,
@@ -2783,23 +2796,13 @@ async function createWindow() {
     },
   });
 
-  // Apply native macOS effects
   if (process.platform === 'darwin') {
     win.once('ready-to-show', () => {
       if (win && !win.isDestroyed()) {
         try {
-          // Apply vibrancy with HUDWindow material (or others like 'Sidebar', 'UnderWindowBackground')
-          setVibrancy(win, 'HUDWindow');
-
-          // Apply rounded corners
           setRoundedCorners(win, 20);
-
-          // Make titlebar transparent
-          setTransparentTitlebar(win);
-
-          log.info('[MacOS] Applied native visual effects');
         } catch (error) {
-          log.error('[MacOS] Failed to apply native visual effects:', error);
+          log.error('[MacOS] Failed to apply rounded corners:', error);
         }
       }
     });
@@ -3052,7 +3055,7 @@ async function createWindow() {
                   language: 'system',
                   isFirstLaunch: true,
                   modelType: 'cloud',
-                  cloud_model_type: 'gpt-4.1',
+                  cloud_model_type: 'gpt-5.4',
                   initState: 'carousel',
                   share_token: null,
                   workerListData: {}

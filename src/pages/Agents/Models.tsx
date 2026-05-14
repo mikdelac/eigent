@@ -37,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SITE_URL } from '@/lib';
 import { INIT_PROVODERS } from '@/lib/llm';
 import { useAuthStore } from '@/store/authStore';
 import { Provider } from '@/types';
@@ -119,12 +120,15 @@ export default function SettingModels() {
   } = useAuthStore();
   const _navigate = useNavigate();
   const { t } = useTranslation();
-  const getValidateMessage = (res: any) =>
-    res?.message ??
-    res?.detail?.message ??
-    res?.detail?.error?.message ??
-    res?.error?.message ??
-    t('setting.validate-failed');
+  const getValidateMessage = (res: any): string => {
+    const msg =
+      res?.message ??
+      res?.detail?.message ??
+      res?.detail?.error?.message ??
+      res?.error?.message ??
+      t('setting.validate-failed');
+    return typeof msg === 'string' ? msg : JSON.stringify(msg);
+  };
   const [items, _setItems] = useState<Provider[]>(
     INIT_PROVODERS.filter((p) => p.id !== 'local')
   );
@@ -144,6 +148,7 @@ export default function SettingModels() {
   const [showApiKey, setShowApiKey] = useState(() =>
     INIT_PROVODERS.filter((p) => p.id !== 'local').map(() => false)
   );
+  const [showSecret, setShowSecret] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState<number | null>(null);
   const [errors, setErrors] = useState<
     {
@@ -267,7 +272,7 @@ export default function SettingModels() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await proxyFetchGet('/api/providers');
+        const res = await proxyFetchGet('/api/v1/providers');
         const providerList = Array.isArray(res) ? res : res.items || [];
         // Handle custom models
         setForm((f) =>
@@ -488,18 +493,16 @@ export default function SettingModels() {
     { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview' },
     { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro Preview' },
     { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview' },
-    { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini' },
-    { id: 'gpt-4.1', name: 'GPT-4.1' },
-    { id: 'gpt-5', name: 'GPT-5' },
-    { id: 'gpt-5.1', name: 'GPT-5.1' },
-    { id: 'gpt-5.2', name: 'GPT-5.2' },
     { id: 'gpt-5.4', name: 'GPT-5.4' },
+    { id: 'gpt-5.5', name: 'GPT-5.5' },
     { id: 'gpt-5-mini', name: 'GPT-5 Mini' },
     { id: 'claude-haiku-4-5', name: 'Claude Haiku 4.5' },
     { id: 'claude-sonnet-4-5', name: 'Claude Sonnet 4.5' },
     { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6' },
     { id: 'claude-opus-4-6', name: 'Claude Opus 4.6' },
-    { id: 'minimax_m2_5', name: 'Minimax M2.5' },
+    { id: 'claude-opus-4-7', name: 'Claude Opus 4.7' },
+    { id: 'deepseek-v4-pro', name: 'DeepSeek V4 Pro' },
+    { id: 'minimax_m2_7', name: 'Minimax M2.7' },
   ];
 
   const handleVerify = async (idx: number) => {
@@ -507,7 +510,7 @@ export default function SettingModels() {
       form[idx];
     let hasError = false;
     const newErrors = [...errors];
-    if (items[idx].id !== 'local') {
+    if (items[idx].id !== 'local' && items[idx].id !== 'aws-bedrock-converse') {
       if (!apiKey || apiKey.trim() === '') {
         newErrors[idx].apiKey = t('setting.api-key-can-not-be-empty');
         hasError = true;
@@ -544,7 +547,7 @@ export default function SettingModels() {
       const res = await fetchPost('/model/validate', {
         model_platform: item.id,
         model_type: form[idx].model_type,
-        api_key: form[idx].apiKey,
+        api_key: form[idx].apiKey || null,
         url: form[idx].apiHost,
         extra_params: external,
       });
@@ -597,12 +600,12 @@ export default function SettingModels() {
     }
     try {
       if (provider_id) {
-        await proxyFetchPut(`/api/provider/${provider_id}`, data);
+        await proxyFetchPut(`/api/v1/provider/${provider_id}`, data);
       } else {
-        await proxyFetchPost('/api/provider', data);
+        await proxyFetchPost('/api/v1/provider', data);
       }
       // add: refresh provider list after saving, update form and switch editable status
-      const res = await proxyFetchGet('/api/providers');
+      const res = await proxyFetchGet('/api/v1/providers');
       const providerList = Array.isArray(res) ? res : res.items || [];
       setForm((f) =>
         f.map((fi, i) => {
@@ -792,15 +795,15 @@ export default function SettingModels() {
 
       // Update or create provider
       if (currentProviderId) {
-        await proxyFetchPut(`/api/provider/${currentProviderId}`, data);
+        await proxyFetchPut(`/api/v1/provider/${currentProviderId}`, data);
       } else {
-        await proxyFetchPost('/api/provider', data);
+        await proxyFetchPost('/api/v1/provider', data);
       }
 
       setLocalError(null);
       setLocalInputError(false);
       // add: refresh provider list after saving, update localProviderIds and localPrefer
-      const res = await proxyFetchGet('/api/providers');
+      const res = await proxyFetchGet('/api/v1/providers');
       const providerList = Array.isArray(res) ? res : res.items || [];
       const local = providerList.find(
         (p: any) => p.provider_name === localPlatform
@@ -876,7 +879,7 @@ export default function SettingModels() {
       });
     }
     try {
-      await proxyFetchPost('/api/provider/prefer', {
+      await proxyFetchPost('/api/v1/provider/prefer', {
         provider_id: form[idx].provider_id,
       });
       setModelType('custom');
@@ -910,7 +913,7 @@ export default function SettingModels() {
       const targetProviderId =
         providerId !== undefined ? providerId : localProviderIds[localPlatform];
       if (targetProviderId === undefined) return;
-      await proxyFetchPost('/api/provider/prefer', {
+      await proxyFetchPost('/api/v1/provider/prefer', {
         provider_id: targetProviderId,
       });
       setModelType('local');
@@ -929,7 +932,7 @@ export default function SettingModels() {
     try {
       const currentProviderId = localProviderIds[localPlatform];
       if (currentProviderId !== undefined) {
-        await proxyFetchDelete(`/api/provider/${currentProviderId}`);
+        await proxyFetchDelete(`/api/v1/provider/${currentProviderId}`);
       }
       // Set endpoint to platform default
       const defaultEndpoint = getDefaultLocalEndpoint(localPlatform);
@@ -961,7 +964,7 @@ export default function SettingModels() {
     try {
       const { provider_id } = form[idx];
       if (provider_id) {
-        await proxyFetchDelete(`/api/provider/${provider_id}`);
+        await proxyFetchDelete(`/api/v1/provider/${provider_id}`);
       }
       // reset single form entry to default empty values
       setForm((prev) =>
@@ -1001,7 +1004,7 @@ export default function SettingModels() {
   // removed bulk reset; only single-provider delete is supported
 
   const checkHasSearchKey = async () => {
-    const configsRes = await proxyFetchGet('/api/configs');
+    const configsRes = await proxyFetchGet('/api/v1/configs');
     const configs = Array.isArray(configsRes) ? configsRes : [];
     console.log(configsRes, configs);
     const _hasApiKey = configs.find(
@@ -1015,7 +1018,7 @@ export default function SettingModels() {
 
   const [subscription, setSubscription] = useState<any>(null);
   const fetchSubscription = async () => {
-    const res = await proxyFetchGet('/api/subscription');
+    const res = await proxyFetchGet('/api/v1/subscription');
     console.log(res);
     if (res) {
       setSubscription(res);
@@ -1026,7 +1029,7 @@ export default function SettingModels() {
   const updateCredits = async () => {
     try {
       setLoadingCredits(true);
-      const res = await proxyFetchGet(`/api/user/current_credits`);
+      const res = await proxyFetchGet(`/api/v1/user/current_credits`);
       console.log(res?.credits);
       setCredits(res?.credits);
     } catch (error) {
@@ -1068,6 +1071,7 @@ export default function SettingModels() {
       grok: PROVIDER_AVATAR_URLS.grok,
       mistral: PROVIDER_AVATAR_URLS.mistral,
       'aws-bedrock': bedrockImage,
+      'aws-bedrock-converse': bedrockImage,
       azure: azureImage,
       'openai-compatible-model': openaiImage, // Use OpenAI icon as fallback
       // Local models
@@ -1197,7 +1201,7 @@ export default function SettingModels() {
               </span>
               <span
                 onClick={() => {
-                  window.location.href = `https://www.eigent.ai/pricing`;
+                  window.location.href = `${SITE_URL}/pricing`;
                 }}
                 className="cursor-pointer text-body-sm text-text-label underline"
               >
@@ -1220,7 +1224,7 @@ export default function SettingModels() {
             </div>
             <Button
               onClick={() => {
-                window.location.href = `https://www.eigent.ai/dashboard`;
+                window.location.href = `${SITE_URL}/dashboard`;
               }}
               variant="primary"
               size="sm"
@@ -1258,23 +1262,11 @@ export default function SettingModels() {
                   <SelectItem value="gemini-3-flash-preview">
                     {t('setting.gemini-3-flash-preview-name')}
                   </SelectItem>
-                  <SelectItem value="gpt-4.1-mini">
-                    {t('setting.gpt-4.1-mini-name')}
-                  </SelectItem>
-                  <SelectItem value="gpt-4.1">
-                    {t('setting.gpt-4.1-name')}
-                  </SelectItem>
-                  <SelectItem value="gpt-5">
-                    {t('setting.gpt-5-name')}
-                  </SelectItem>
-                  <SelectItem value="gpt-5.1">
-                    {t('setting.gpt-5.1-name')}
-                  </SelectItem>
-                  <SelectItem value="gpt-5.2">
-                    {t('setting.gpt-5.2-name')}
-                  </SelectItem>
                   <SelectItem value="gpt-5.4">
                     {t('setting.gpt-5.4-name')}
+                  </SelectItem>
+                  <SelectItem value="gpt-5.5">
+                    {t('setting.gpt-5.5-name')}
                   </SelectItem>
                   <SelectItem value="gpt-5-mini">
                     {t('setting.gpt-5-mini-name')}
@@ -1291,8 +1283,14 @@ export default function SettingModels() {
                   <SelectItem value="claude-opus-4-6">
                     {t('setting.claude-opus-4-6-name')}
                   </SelectItem>
-                  <SelectItem value="minimax_m2_5">
-                    {t('setting.minimax-m2-5-name')}
+                  <SelectItem value="claude-opus-4-7">
+                    {t('setting.claude-opus-4-7-name')}
+                  </SelectItem>
+                  <SelectItem value="deepseek-v4-pro">
+                    {t('setting.deepseek-v4-pro-name')}
+                  </SelectItem>
+                  <SelectItem value="minimax_m2_7">
+                    {t('setting.minimax-m2-7-name')}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -1474,8 +1472,32 @@ export default function SettingModels() {
                     <Input
                       size="default"
                       title={ec.name}
+                      type={
+                        ec.secret && !showSecret[`${idx}-${ecIdx}`]
+                          ? 'password'
+                          : 'text'
+                      }
+                      placeholder={ec.placeholder ?? `Enter your ${ec.name}`}
                       state={errors[idx]?.externalConfig ? 'error' : undefined}
                       note={errors[idx]?.externalConfig ?? undefined}
+                      backIcon={
+                        ec.secret ? (
+                          showSecret[`${idx}-${ecIdx}`] ? (
+                            <Eye className="h-5 w-5" />
+                          ) : (
+                            <EyeOff className="h-5 w-5" />
+                          )
+                        ) : undefined
+                      }
+                      onBackIconClick={
+                        ec.secret
+                          ? () =>
+                              setShowSecret((prev) => ({
+                                ...prev,
+                                [`${idx}-${ecIdx}`]: !prev[`${idx}-${ecIdx}`],
+                              }))
+                          : undefined
+                      }
                       value={ec.value}
                       onChange={(e) => {
                         const v = e.target.value;

@@ -25,6 +25,7 @@ import EndNoticeDialog from '@/components/Dialog/EndNotice';
 import { Button } from '@/components/ui/button';
 import { TooltipSimple } from '@/components/ui/tooltip';
 import useChatStoreAdapter from '@/hooks/useChatStoreAdapter';
+import { SITE_URL } from '@/lib';
 import { share } from '@/lib/share';
 import { useAuthStore } from '@/store/authStore';
 import { useInstallationUI } from '@/store/installationStore';
@@ -111,9 +112,9 @@ function HeaderWin() {
 
   const getReferFriendsLink = async () => {
     try {
-      const res: any = await proxyFetchGet('/api/user/invite_code');
+      const res: any = await proxyFetchGet('/api/v1/user/invite_code');
       if (res?.invite_code) {
-        const inviteLink = `https://www.eigent.ai/signup?invite_code=${res.invite_code}`;
+        const inviteLink = `${SITE_URL}/signup?invite_code=${res.invite_code}`;
         await navigator.clipboard.writeText(inviteLink);
         toast.success(t('layout.invitation-link-copied'));
       } else {
@@ -158,7 +159,7 @@ function HeaderWin() {
       // Delete from history using historyId
       if (historyId && task.status !== ChatTaskStatus.FINISHED) {
         try {
-          await proxyFetchDelete(`/api/chat/history/${historyId}`);
+          await proxyFetchDelete(`/api/v1/chat/history/${historyId}`);
           // Remove from local store
           chatStore.removeTask(taskId);
         } catch (error) {

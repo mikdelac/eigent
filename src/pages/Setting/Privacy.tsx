@@ -15,6 +15,7 @@
 import { proxyFetchGet, proxyFetchPut } from '@/api/http';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { SITE_URL } from '@/lib';
 import { ChevronDown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -24,7 +25,7 @@ export default function SettingPrivacy() {
   const [isHowWeHandleOpen, setIsHowWeHandleOpen] = useState(false);
 
   useEffect(() => {
-    proxyFetchGet('/api/user/privacy')
+    proxyFetchGet('/api/v1/user/privacy')
       .then((res) => {
         setHelpImprove(res.help_improve || false);
       })
@@ -33,8 +34,8 @@ export default function SettingPrivacy() {
 
   const handleToggleHelpImprove = (checked: boolean) => {
     setHelpImprove(checked);
-    proxyFetchPut('/api/user/privacy', { help_improve: checked }).catch((err) =>
-      console.error('Failed to update settings:', err)
+    proxyFetchPut('/api/v1/user/privacy', { help_improve: checked }).catch(
+      (err) => console.error('Failed to update settings:', err)
     );
   };
 
@@ -64,7 +65,7 @@ export default function SettingPrivacy() {
                 {t('setting.data-privacy-description')}{' '}
                 <a
                   className="text-blue-500 no-underline"
-                  href="https://www.eigent.ai/privacy-policy"
+                  href={`${SITE_URL}/privacy-policy`}
                   target="_blank"
                   rel="noreferrer"
                 >
