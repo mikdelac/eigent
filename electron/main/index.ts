@@ -563,7 +563,7 @@ async function startAuthCallbackServer() {
         </style></head>
         <body><div class="container">
           <h1>Login Successful</h1>
-          <p>You can close this tab and return to Eigent.</p>
+          <p>You can close this tab and return to steamOvap.</p>
         </div></body></html>
       `);
 
@@ -2753,7 +2753,7 @@ async function createWindow() {
   // Platform-specific window configuration
   // Windows: native frame and solid background. macOS/Linux: frameless; macOS corner radius via native hook.
   win = new BrowserWindow({
-    title: 'Eigent',
+    title: 'steamOvap',
     width: 1200,
     height: 800,
     minWidth: 1050,

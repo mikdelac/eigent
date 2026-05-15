@@ -48,18 +48,18 @@
     --colors-indigo-900: #312c85;
     --colors-indigo-950: #1e1a4d;
     --colors-indigo-default: #4f39f6;
-    /* Blue */
-    --colors-blue-50: #eff6ff;
-    --colors-blue-100: #dbeafe;
-    --colors-blue-200: #bedbff;
-    --colors-blue-300: #8ec5ff;
-    --colors-blue-400: #51a2ff;
-    --colors-blue-500: #2b7fff;
-    --colors-blue-700: #1447e6;
-    --colors-blue-800: #193cb8;
-    --colors-blue-900: #1c398e;
-    --colors-blue-950: #162456;
-    --colors-blue-default: #155dfc;
+    /* Blue — steamOvap primary blue */
+    --colors-blue-50: #d9edfc;
+    --colors-blue-100: #b3dcfa;
+    --colors-blue-200: #8ecbf8;
+    --colors-blue-300: #68b9f5;
+    --colors-blue-400: #42a8f3;
+    --colors-blue-500: #1d97f1;
+    --colors-blue-700: #1364a0;
+    --colors-blue-800: #0e4b78;
+    --colors-blue-900: #093250;
+    --colors-blue-950: #041928;
+    --colors-blue-default: #1d97f1;
     /* Amber */
     --colors-amber-50: #fffbeb;
     --colors-amber-100: #fef3c6;
@@ -138,7 +138,7 @@
     --colors-black-50: #00000080;
     --colors-black-80: #000000cc;
     --colors-black-100: #000000;
-    /* Primary */
+    /* Primary — steamOvap navy for action surfaces; neutral grays preserved for muted UI */
     --colors-primary-1: #f5f5f5;
     --colors-primary-2: #eeeeee;
     --colors-primary-3: #cccccc;
@@ -146,10 +146,10 @@
     --colors-primary-5: #888888;
     --colors-primary-6: #666666;
     --colors-primary-7: #444444;
-    --colors-primary-8: #333333;
-    --colors-primary-10: #111111;
-    --colors-primary-11: #000000;
-    --colors-primary-default: #222222;
+    --colors-primary-8: #2a4e96; /* steamOvap secondary-400 */
+    --colors-primary-10: #001c58; /* steamOvap secondary-700 */
+    --colors-primary-11: #000e2b; /* steamOvap secondary-900 */
+    --colors-primary-default: #002b81; /* steamOvap secondary-500 (navy) */
     /* Off-White */
     --colors-off-white-0: #f5f5f500;
     --colors-off-white-10: #f5f5f51a;

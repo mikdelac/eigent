@@ -18,9 +18,9 @@ import {
   proxyFetchDelete,
   proxyFetchGet,
 } from '@/api/http';
-import defaultFolderIcon from '@/assets/Folder.svg';
 import giftWhiteIcon from '@/assets/gift-white.svg';
 import giftIcon from '@/assets/gift.svg';
+import steamovapBadge from '@/assets/logo/steamovap_badge.svg';
 import EndNoticeDialog from '@/components/Dialog/EndNotice';
 import { Button } from '@/components/ui/button';
 import { TooltipSimple } from '@/components/ui/tooltip';
@@ -212,10 +212,10 @@ function HeaderWin() {
       <div
         className={`no-drag ml-2 mt-[1.5px] flex items-center justify-center gap-1 ${platform === 'darwin' ? 'w-8' : 'w-auto pr-4'}`}
       >
-        <img src={defaultFolderIcon} alt="folder-icon" className="h-6 w-6" />
+        <img src={steamovapBadge} alt="steamOvap" className="h-6 w-6" />
         {platform !== 'darwin' && (
           <span className="whitespace-nowrap text-label-md font-bold text-text-heading">
-            Eigent
+            steamOvap
           </span>
         )}
       </div>

@@ -312,7 +312,7 @@ export default function Login() {
         className="absolute left-1/2 top-10 h-16 w-16 -translate-x-1/2"
       />
       <div className="mb-8 text-heading-lg font-bold text-text-heading">
-        Eigent
+        steamOvap
       </div>
       {generalError && (
         <p className="mb-4 mt-1 text-label-md text-text-cuation">
@@ -327,7 +327,7 @@ export default function Login() {
         disabled={isLoading}
       >
         <span className="flex-1">
-          {isLoading ? t('layout.logging-in') : 'Start Eigent'}
+          {isLoading ? t('layout.logging-in') : 'Start steamOvap'}
         </span>
       </Button>
     </div>

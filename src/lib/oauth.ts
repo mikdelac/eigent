@@ -17,7 +17,7 @@ const EnvOauthInfoMap = {
 };
 
 export class OAuth {
-  public client_name: string = 'Eigent';
+  public client_name: string = 'steamOvap';
   public client_uri: string = 'https://eigent.ai/';
   public redirect_uris: string[] = [];
 
