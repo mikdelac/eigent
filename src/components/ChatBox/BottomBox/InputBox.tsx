@@ -33,7 +33,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { ExpandedInputBox } from './ExpandedInputBox';
@@ -132,7 +132,7 @@ export const Inputbox = ({
   files = [],
   onFilesChange,
   onAddFile,
-  placeholder: _placeholder = 'Ask Eigent to automate your tasks',
+  placeholder: _placeholder = 'Ask steamOvap to automate your tasks',
   disabled = false,
   className,
   textareaRef: externalTextareaRef,
@@ -155,9 +155,8 @@ export const Inputbox = ({
   const [isExpandedDialogOpen, setIsExpandedDialogOpen] = useState(false);
   const [triggerDialogOpen, setTriggerDialogOpen] = useState(false);
   const expandedTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const instanceIdRef = useRef<string>(
-    `inputbox-${Math.random().toString(36).substr(2, 9)}`
-  );
+  const generatedInstanceId = useId();
+  const instanceIdRef = useRef<string>(`inputbox-${generatedInstanceId}`);
 
   // Handle dialog open/close with singleton tracking
   const handleExpandedDialogChange = useCallback((open: boolean) => {
