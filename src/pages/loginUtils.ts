@@ -25,3 +25,20 @@ export function getExternalLoginUrl(callbackUrl: string): string {
   loginUrl.searchParams.set('callbackUrl', callbackUrl);
   return loginUrl.toString();
 }
+
+/**
+ * Backend-driven Cognito Hosted UI login start URL (self-hosted web).
+ * Points the browser at the backend, which 302-redirects to Cognito and, after
+ * the callback, returns to `${returnOrigin}/login?token=<jwt>`.
+ */
+export function getCognitoLoginStartUrl(returnOrigin: string): string {
+  const apiBase = (
+    import.meta.env.VITE_PROXY_URL ||
+    import.meta.env.VITE_BASE_URL ||
+    ''
+  ).replace(/\/$/, '');
+  // Absolute apiBase ignores the base arg; relative ('/api') resolves against origin.
+  const url = new URL(`${apiBase}/api/v1/auth/cognito/login`, returnOrigin);
+  url.searchParams.set('redirect', returnOrigin);
+  return url.toString();
+}

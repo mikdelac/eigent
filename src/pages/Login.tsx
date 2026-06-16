@@ -23,6 +23,7 @@ import WindowControls from '@/components/WindowControls';
 import { useHost } from '@/host';
 import {
   DESKTOP_LOGIN_CALLBACK_URL,
+  getCognitoLoginStartUrl,
   getExternalLoginUrl,
   getWebLoginCallbackUrl,
 } from '@/pages/loginUtils';
@@ -32,6 +33,9 @@ import background from '@/assets/custom/background.png';
 import eigentLogo from '@/assets/logo/eigent_icon.png';
 
 const IS_LOCAL_MODE = import.meta.env.VITE_USE_LOCAL_PROXY === 'true';
+// Auth provider override (decoupled from VITE_USE_LOCAL_PROXY so self-hosted can
+// keep its local/custom model mode while authenticating against Cognito Hosted UI).
+const IS_COGNITO_MODE = import.meta.env.VITE_AUTH_PROVIDER === 'cognito';
 let lock = false;
 
 export default function Login() {
@@ -227,7 +231,8 @@ export default function Login() {
 
       setGeneralError('');
       setIsLoading(true);
-      setModelType('cloud');
+      // Self-hosted Cognito keeps its custom/local model mode; don't force cloud.
+      setModelType(IS_COGNITO_MODE ? 'custom' : 'cloud');
       setAuth({ email: '', token, username: '', user_id: 0 });
       setLocalProxyValue(import.meta.env.VITE_USE_LOCAL_PROXY || null);
       try {
@@ -291,14 +296,23 @@ export default function Login() {
   }, [handleAuthCode, host]);
 
   useEffect(() => {
-    if (IS_LOCAL_MODE || isDesktopHost) return;
+    if (isDesktopHost) return;
+    // Cognito web returns ?token even when local proxy mode is on, so allow it.
+    if (IS_LOCAL_MODE && !IS_COGNITO_MODE) return;
 
-    const token = new URLSearchParams(location.search).get('token');
+    const params = new URLSearchParams(location.search);
+    const authError = params.get('auth_error');
+    if (authError) {
+      setGeneralError(t('layout.login-failed-please-try-again'));
+      return;
+    }
+
+    const token = params.get('token');
     if (!token || handledWebTokenRef.current === token) return;
 
     handledWebTokenRef.current = token;
     handleTokenLogin(token);
-  }, [handleTokenLogin, isDesktopHost, location.search]);
+  }, [handleTokenLogin, isDesktopHost, location.search, setGeneralError, t]);
 
   useEffect(() => {
     if (!host?.electronAPI?.getPlatform) {
@@ -397,6 +411,15 @@ export default function Login() {
       <Button
         onClick={() => {
           setIsLoading(true);
+
+          // Self-hosted Cognito Hosted UI: redirect to the backend start endpoint.
+          if (IS_COGNITO_MODE) {
+            window.location.assign(
+              getCognitoLoginStartUrl(window.location.origin)
+            );
+            return;
+          }
+
           const resolvedCallbackUrl =
             callbackUrl ||
             (isDesktopHost
@@ -464,7 +487,9 @@ export default function Login() {
             backgroundPosition: 'center',
           }}
         >
-          {IS_LOCAL_MODE ? renderLocalMode() : renderHybridMode()}
+          {IS_LOCAL_MODE && !IS_COGNITO_MODE
+            ? renderLocalMode()
+            : renderHybridMode()}
         </div>
       </div>
     </div>
