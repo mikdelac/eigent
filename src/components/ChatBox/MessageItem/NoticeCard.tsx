@@ -35,7 +35,6 @@ export function NoticeCard() {
   // when cotList is added, smooth scroll to the bottom
   useEffect(() => {
     if (!isExpanded && contentRef.current) {
-      console.log('contentRef.current', contentRef.current);
       // use setTimeout to ensure DOM update is completed before scrolling
       setTimeout(() => {
         const container = contentRef.current;
@@ -59,7 +58,8 @@ export function NoticeCard() {
         <div className="relative h-auto w-full overflow-hidden rounded-xl py-3 pr-5 backdrop-blur-[5px]">
           <div className="relative">
             <Button
-              size="icon"
+              size="xs"
+              buttonContent="icon-only"
               variant="ghost"
               className="absolute right-[-15px] top-0"
               onClick={() => setIsExpanded(!isExpanded)}
@@ -92,7 +92,7 @@ export function NoticeCard() {
                       key={`taskList-${index}`}
                       className={`flex cursor-pointer gap-2 rounded-lg border border-solid border-transparent transition-all duration-300 ease-in-out animate-in fade-in-0 slide-in-from-left-2`}
                     >
-                      <div className="m-1.5 mt-2 h-1 w-1 rounded-full bg-icon-primary"></div>
+                      <div className="m-1.5 mt-2 h-1 w-1 rounded-full bg-ds-icon-neutral-default-default"></div>
                       <div className="flex flex-1 flex-col items-start justify-center text-sm font-normal leading-normal">
                         {cot}
                       </div>

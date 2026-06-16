@@ -18,21 +18,21 @@ export const TaskType = ({ type }: { type: 1 | 2 | 3 }) => {
   const typeMap = {
     1: {
       label: t('layout.task-splitting'),
-      textColor: 'text-badge-splitting-surface-foreground',
-      bgColor: 'bg-badge-splitting-surface',
-      dotColor: 'bg-badge-splitting-surface-foreground',
+      textColor: 'text-ds-text-status-splitting-strong-default',
+      bgColor: 'bg-ds-bg-status-splitting-subtle-default',
+      dotColor: 'bg-ds-text-status-splitting-strong-default',
     },
     2: {
       label: t('layout.task-running'),
-      textColor: 'text-text-success-primary',
-      bgColor: 'bg-bg-fill-success-secondary',
-      dotColor: 'bg-text-success-primary',
+      textColor: 'text-ds-text-status-running-default-default',
+      bgColor: 'bg-ds-bg-status-running-subtle-default',
+      dotColor: 'bg-ds-text-status-running-default-default',
     },
     3: {
       label: t('layout.task-completed'),
-      textColor: 'text-text-primary',
+      textColor: 'text-ds-text-neutral-default-default',
       bgColor: 'bg-transparent',
-      dotColor: 'bg-text-primary',
+      dotColor: 'bg-ds-text-neutral-default-default',
     },
   };
   return (

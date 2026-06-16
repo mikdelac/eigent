@@ -877,7 +877,7 @@ export const SchedulePicker: React.FC<SchedulePickerProps> = ({
             </div>
           </div>
           <div>
-            <div className="mb-1.5 text-body-sm font-bold text-text-heading">
+            <div className="mb-1.5 text-body-sm font-bold text-ds-text-neutral-default-default">
               {t('triggers.schedule-weekdays')} *
             </div>
             <ToggleGroup
@@ -945,7 +945,7 @@ export const SchedulePicker: React.FC<SchedulePickerProps> = ({
               </ToggleGroupItem>
             </ToggleGroup>
             {showErrors && weekdays.length === 0 && (
-              <div className="mt-1 text-xs text-text-cuation">
+              <div className="mt-1 text-xs text-ds-text-status-error-strong-default">
                 {t('triggers.weekday-required')}
               </div>
             )}
@@ -1041,18 +1041,18 @@ export const SchedulePicker: React.FC<SchedulePickerProps> = ({
       <Accordion type="single" collapsible className="mt-auto w-full">
         <AccordionItem value="scheduled-times" className="border-none">
           <AccordionTrigger className="bg-transparent py-2 hover:no-underline">
-            <span className="text-sm font-bold text-text-heading">
+            <span className="text-sm font-bold text-ds-text-neutral-default-default">
               {t('triggers.preview-scheduled-times')}
             </span>
           </AccordionTrigger>
           <AccordionContent>
-            <div className="space-y-2 rounded-lg bg-surface-primary p-4">
+            <div className="space-y-2 rounded-lg bg-ds-bg-neutral-subtle-default p-4">
               {nextScheduledTimes.map((time, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-2 text-label-sm text-text-body"
+                  className="flex items-center gap-2 text-label-sm text-ds-text-neutral-default-default"
                 >
-                  <span className="w-5 font-mono text-xs text-text-label">
+                  <span className="w-5 font-mono text-xs text-ds-text-neutral-muted-default">
                     {String(index + 1).padStart(2, '0')}
                   </span>
                   <span>{formatScheduledTime(time)}</span>

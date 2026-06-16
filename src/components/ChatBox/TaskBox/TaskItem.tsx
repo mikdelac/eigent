@@ -67,17 +67,20 @@ export function TaskItem({
     <div key={`task-item-${taskIndex}`} className="w-full">
       <div
         onDoubleClick={(e) => handleFocus(e, true)}
-        className={`group relative flex min-h-2 w-full items-start gap-0 rounded-lg border border-solid p-sm hover:bg-task-fill-hover ${
+        className={`group relative mb-2 flex min-h-2 w-full items-start gap-0 rounded-lg border border-solid p-sm hover:bg-ds-bg-neutral-default-hover ${
           isFocus
-            ? 'border-task-border-focus-default bg-task-fill-default'
-            : 'border-task-border-default group-hover:border-transparent'
+            ? 'border-ds-border-neutral-subtle-disabled bg-ds-bg-neutral-subtle-default'
+            : 'border-ds-border-neutral-subtle-default group-hover:border-transparent'
         }`}
       >
         <div className="flex h-4 w-7 flex-shrink-0 cursor-pointer items-center justify-center pr-sm pt-0.5">
           {taskInfo.id === '' ? (
-            <CircleDashed size={13} className="text-icon-secondary" />
+            <CircleDashed
+              size={13}
+              className="text-ds-icon-neutral-muted-default"
+            />
           ) : (
-            <div className="h-2 w-2 rounded-full bg-icon-information"></div>
+            <div className="h-2 w-2 rounded-full bg-ds-icon-information-default-default"></div>
           )}
         </div>
         <div className="relative flex min-h-4 min-w-0 flex-1 items-center self-stretch overflow-hidden py-0.5 transition-all duration-300">
@@ -111,7 +114,8 @@ export function TaskItem({
               onClick={(e) => handleFocus(e, true)}
               className="rounded-full"
               variant="outline"
-              size="icon"
+              size="xs"
+              buttonContent="icon-only"
             >
               <PenLine size={16} className="" />
             </Button>
@@ -123,21 +127,20 @@ export function TaskItem({
               }}
               className="rounded-full"
               variant="success"
-              size="icon"
+              size="xs"
+              buttonContent="icon-only"
             >
-              <Check
-                size={16}
-                className="text-button-fill-success-foreground"
-              />
+              <Check size={16} className="text-current" />
             </Button>
           )}
           <Button
             onClick={() => onDelete()}
             className="rounded-full"
-            variant="cuation"
-            size="icon"
+            variant="caution"
+            size="xs"
+            buttonContent="icon-only"
           >
-            <Trash2 size={16} className="text-icon-tertiary" />
+            <Trash2 size={16} className="text-ds-icon-neutral-muted-default" />
           </Button>
         </div>
       </div>

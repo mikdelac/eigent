@@ -100,7 +100,7 @@ export default function SkillListItem(props: SkillListItemProps) {
       <div
         role={isClickable ? 'button' : undefined}
         tabIndex={isClickable ? 0 : undefined}
-        className={`focus-visible:ring-ring flex w-full flex-col flex-wrap items-center justify-center gap-3 rounded-2xl bg-surface-primary px-6 py-8 transition-colors focus:outline-none focus-visible:ring-2 ${isClickable ? 'cursor-pointer hover:bg-surface-tertiary' : ''}`}
+        className={`focus-visible:ring-ring flex w-full flex-col flex-wrap items-center justify-center gap-3 rounded-2xl bg-ds-bg-neutral-subtle-default px-6 py-8 transition-colors focus:outline-none focus-visible:ring-2 ${isClickable ? 'cursor-pointer hover:bg-ds-bg-neutral-strong-hover' : ''}`}
         onClick={isClickable ? props.onAddClick : undefined}
         onKeyDown={
           isClickable
@@ -114,8 +114,12 @@ export default function SkillListItem(props: SkillListItemProps) {
         }
         aria-label={isClickable ? props.addButtonText : undefined}
       >
-        <p className="text-body-sm text-text-label">{props.message}</p>
-        {isClickable && <Plus className="h-4 w-4 text-icon-primary" />}
+        <p className="text-body-sm text-ds-text-neutral-muted-default">
+          {props.message}
+        </p>
+        {isClickable && (
+          <Plus className="h-4 w-4 text-ds-icon-neutral-default-default" />
+        )}
       </div>
     );
   }
@@ -177,12 +181,12 @@ export default function SkillListItem(props: SkillListItemProps) {
 
   return (
     <div
-      className={`w-full flex-1 flex-col justify-between rounded-2xl bg-surface-tertiary p-4 transition-colors ${skill.isExample && !skill.enabled ? 'opacity-50' : ''}`}
+      className={`w-full flex-1 flex-col justify-between rounded-2xl bg-ds-bg-neutral-subtle-default p-4 transition-colors ${skill.isExample && !skill.enabled ? 'opacity-50' : ''}`}
     >
       {/* Row 1: Name / Actions */}
       <div className="flex items-center justify-between">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="text-body-base truncate font-bold text-text-heading">
+          <span className="text-body-base truncate font-bold text-ds-text-neutral-default-default">
             {skill.name}
           </span>
         </div>
@@ -195,24 +199,25 @@ export default function SkillListItem(props: SkillListItemProps) {
           <TooltipSimple content={t('agents.try-in-chat')}>
             <Button
               variant="ghost"
-              size="icon"
+              size="xs"
+              buttonContent="icon-only"
               disabled={!skill.enabled}
               onClick={skill.enabled ? handleTryInChat : undefined}
             >
-              <MessageSquare className="h-4 w-4 text-icon-primary" />
+              <MessageSquare className="h-4 w-4 text-ds-icon-neutral-default-default" />
             </Button>
           </TooltipSimple>
           {!skill.isExample && onDelete && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Ellipsis className="h-4 w-4 text-icon-primary" />
+                <Button variant="ghost" size="xs" buttonContent="icon-only">
+                  <Ellipsis className="h-4 w-4 text-ds-icon-neutral-default-default" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
                 <DropdownMenuItem
                   onClick={onDelete}
-                  className="text-text-cuation focus:text-text-cuation"
+                  className="text-ds-text-status-error-strong-default focus:text-ds-text-status-error-strong-default"
                 >
                   <Trash2 className="h-4 w-4" />
                   {t('layout.delete')}
@@ -229,7 +234,7 @@ export default function SkillListItem(props: SkillListItemProps) {
         className="max-w-sm whitespace-pre-wrap break-words"
       >
         <div className="w-full cursor-default">
-          <p className="line-clamp-5 overflow-hidden break-words text-body-sm text-text-label">
+          <p className="line-clamp-5 overflow-hidden break-words text-body-sm text-ds-text-neutral-muted-default">
             {skill.description}
           </p>
         </div>
@@ -250,14 +255,14 @@ export default function SkillListItem(props: SkillListItemProps) {
         </Button>
 
         {scopeOpen && (
-          <div className="flex w-full flex-wrap items-center gap-2 border-x-0 border-b-0 border-t-[0.5px] border-solid border-border-secondary pt-4">
+          <div className="flex w-full flex-wrap items-center gap-2 border-x-0 border-b-0 border-t-[0.5px] border-solid border-ds-border-neutral-default-default pt-4">
             {/* All agents as first tab; then each agent toggle */}
             <button
               type="button"
               onClick={handleToggleAllAgents}
-              className={`inline-flex items-center gap-2 rounded-full bg-surface-primary px-2 py-1 text-label-xs font-medium text-text-primary transition-opacity hover:opacity-100 [&>svg]:shrink-0 ${
+              className={`inline-flex items-center gap-2 rounded-full bg-ds-bg-neutral-subtle-default px-2 py-1 text-label-xs font-medium text-ds-text-neutral-default-default transition-opacity hover:opacity-100 [&>svg]:shrink-0 ${
                 isAllAgentsSelected
-                  ? 'opacity-100 [&>svg]:text-icon-success'
+                  ? 'opacity-100 [&>svg]:text-ds-icon-status-completed-default-default'
                   : 'opacity-60 [&>svg]:text-inherit'
               }`}
             >
@@ -282,9 +287,9 @@ export default function SkillListItem(props: SkillListItemProps) {
                   key={agent.value}
                   type="button"
                   onClick={() => handleToggleAgent(agent.value)}
-                  className={`inline-flex items-center gap-2 rounded-full bg-surface-primary px-2 py-1 text-label-xs font-medium text-text-primary transition-opacity hover:opacity-100 [&>svg]:shrink-0 ${
+                  className={`inline-flex items-center gap-2 rounded-full bg-ds-bg-neutral-subtle-default px-2 py-1 text-label-xs font-medium text-ds-text-neutral-default-default transition-opacity hover:opacity-100 [&>svg]:shrink-0 ${
                     isSelected
-                      ? 'opacity-100 [&>svg]:text-icon-success'
+                      ? 'opacity-100 [&>svg]:text-ds-icon-status-completed-default-default'
                       : 'opacity-50 [&>svg]:text-inherit'
                   }`}
                 >

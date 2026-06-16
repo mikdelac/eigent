@@ -16,19 +16,19 @@ import { Button } from '@/components/ui/button';
 import { SITE_URL } from '@/lib';
 import { useAuthStore } from '@/store/authStore';
 import { useStackApp } from '@stackframe/react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { Input } from '@/components/ui/input';
 
 import { proxyFetchPost } from '@/api/http';
-import background from '@/assets/background.png';
-import eyeOff from '@/assets/eye-off.svg';
-import eye from '@/assets/eye.svg';
-import github2 from '@/assets/github2.svg';
-import google from '@/assets/google.svg';
+import background from '@/assets/custom/background.png';
+import github2 from '@/assets/icon/github.svg';
+import google from '@/assets/icon/google.svg';
 import eigentLogo from '@/assets/logo/eigent_icon.png';
 import WindowControls from '@/components/WindowControls';
+import { useHost } from '@/host';
 import { hasStackKeys } from '@/lib';
 import { useTranslation } from 'react-i18next';
 
@@ -36,6 +36,7 @@ const HAS_STACK_KEYS = hasStackKeys();
 const IS_LOCAL_MODE = import.meta.env.VITE_USE_LOCAL_PROXY === 'true';
 let lock = false;
 export default function SignUp() {
+  const host = useHost();
   // Always call hooks unconditionally - React Hooks must be called in the same order
   const stackApp = useStackApp();
   const app = HAS_STACK_KEYS ? stackApp : null;
@@ -276,21 +277,24 @@ export default function SignUp() {
   );
 
   useEffect(() => {
-    window.ipcRenderer?.on('auth-code-received', handleAuthCode);
-
+    if (!host?.ipcRenderer) return;
+    host.ipcRenderer.on('auth-code-received', handleAuthCode);
     return () => {
-      window.ipcRenderer?.off('auth-code-received', handleAuthCode);
+      host.ipcRenderer?.off('auth-code-received', handleAuthCode);
     };
-  }, [handleAuthCode]);
+  }, [handleAuthCode, host]);
 
   useEffect(() => {
-    const p = window.electronAPI.getPlatform();
+    if (!host?.electronAPI?.getPlatform) {
+      setPlatform('web');
+      return;
+    }
+    const p = host.electronAPI.getPlatform();
     setPlatform(p);
-
-    if (platform === 'darwin') {
+    if (p === 'darwin') {
       titlebarRef.current?.classList.add('mac');
     }
-  }, [platform]);
+  }, []);
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
@@ -326,10 +330,10 @@ export default function SignUp() {
 
       {/* Main content - image extends to top, form has padding */}
       <div
-        className={`flex h-full items-center justify-center gap-2 px-2 pb-2 pt-10`}
+        className={`flex h-full items-center justify-center gap-2 px-1 pb-1 pt-10`}
       >
         <div
-          className="flex h-full min-h-0 w-full flex-col items-center justify-center overflow-hidden rounded-2xl border-solid border-border-tertiary bg-surface-secondary px-2 pb-2"
+          className="flex h-full min-h-0 w-full flex-col items-center justify-center overflow-hidden rounded-2xl bg-ds-bg-neutral-subtle-default px-2 pb-2"
           style={{
             backgroundImage: `url(${background})`,
             backgroundSize: 'cover',
@@ -342,7 +346,7 @@ export default function SignUp() {
               className="absolute left-1/2 top-10 h-16 w-16 -translate-x-1/2"
             />
             <div className="mb-4 flex items-end justify-between self-stretch">
-              <div className="text-heading-lg font-bold text-text-heading">
+              <div className="text-heading-lg font-bold text-ds-text-neutral-default-default">
                 {t('layout.sign-up')}
               </div>
               <Button
@@ -359,7 +363,7 @@ export default function SignUp() {
                   variant="primary"
                   size="lg"
                   onClick={() => handleReloadBtn('google')}
-                  className="mb-4 w-full justify-center rounded-[24px] text-center font-inter text-[15px] font-bold leading-[22px] text-[#F5F5F5] transition-all duration-300 ease-in-out"
+                  className="mb-4 w-full justify-center rounded-2xl text-center font-inter text-body-md font-bold text-ds-text-brand-inverse-default transition-all duration-300 ease-in-out"
                   disabled={isLoading}
                 >
                   <img src={google} className="h-5 w-5" />
@@ -371,7 +375,7 @@ export default function SignUp() {
                   variant="primary"
                   size="lg"
                   onClick={() => handleReloadBtn('github')}
-                  className="mb-4 w-full justify-center rounded-[24px] text-center font-inter text-[15px] font-bold leading-[22px] text-[#F5F5F5] transition-all duration-300 ease-in-out"
+                  className="mb-4 w-full justify-center rounded-2xl text-center font-inter text-body-md font-bold text-ds-text-brand-inverse-default transition-all duration-300 ease-in-out"
                   disabled={isLoading}
                 >
                   <img src={github2} className="h-5 w-5" />
@@ -382,13 +386,13 @@ export default function SignUp() {
               </div>
             )}
             {HAS_STACK_KEYS && (
-              <div className="mb-6 mt-2 w-full text-center font-inter text-[15px] font-medium leading-[22px] text-[#222]">
+              <div className="mb-6 mt-2 w-full text-center font-inter text-body-md font-medium text-ds-text-neutral-default-default">
                 {t('layout.or')}
               </div>
             )}
             <div className="flex w-full flex-col gap-4">
               {generalError && (
-                <p className="mb-4 mt-1 text-label-md text-text-cuation">
+                <p className="mb-4 mt-1 text-label-md text-ds-text-status-error-strong-default">
                   {generalError}
                 </p>
               )}
@@ -419,7 +423,13 @@ export default function SignUp() {
                   }
                   state={errors.password ? 'error' : undefined}
                   note={errors.password}
-                  backIcon={<img src={hidePassword ? eye : eyeOff} />}
+                  backIcon={
+                    hidePassword ? (
+                      <Eye className="h-5 w-5" />
+                    ) : (
+                      <EyeOff className="h-5 w-5" />
+                    )
+                  }
                   onBackIconClick={() => setHidePassword(!hidePassword)}
                 />
 

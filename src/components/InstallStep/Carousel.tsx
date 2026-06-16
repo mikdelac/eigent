@@ -153,7 +153,7 @@ export const CarouselStep: React.FC = () => {
   return (
     <div className="flex h-full w-full flex-col">
       <div className="flex h-full min-h-0 w-full flex-col">
-        <div className="mb-md text-heading-sm font-bold text-text-heading">
+        <div className="mb-md text-heading-sm font-bold text-ds-text-neutral-default-default">
           {carouselItems[currentSlide].title}
         </div>
 
@@ -220,8 +220,8 @@ export const CarouselStep: React.FC = () => {
               onMouseEnter={() => handleIndicatorHover(index)}
               className={`h-1 w-32 cursor-pointer rounded-full transition-all duration-300 ${
                 index === currentSlide
-                  ? 'bg-fill-fill-secondary'
-                  : 'bg-fill-fill-tertiary hover:bg-fill-fill-secondary'
+                  ? 'bg-ds-bg-neutral-default-default'
+                  : 'bg-ds-bg-neutral-subtle-default hover:bg-ds-bg-neutral-default-default'
               }`}
             ></div>
           ))}
@@ -229,7 +229,8 @@ export const CarouselStep: React.FC = () => {
         <Button
           onClick={handleTogglePause}
           variant="ghost"
-          size="icon"
+          size="xs"
+          buttonContent="icon-only"
           className="absolute bottom-0 right-0 rounded-full"
           aria-label={isPaused ? 'Resume' : 'Pause'}
         >

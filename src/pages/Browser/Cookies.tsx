@@ -15,6 +15,7 @@
 import { fetchDelete, fetchGet, fetchPost } from '@/api/http';
 import AlertDialog from '@/components/ui/alertDialog';
 import { Button } from '@/components/ui/button';
+import { useHost } from '@/host';
 import { SITE_URL } from '@/lib';
 import { Cookie, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -34,6 +35,8 @@ interface GroupedDomain {
 }
 
 export default function Cookies() {
+  const host = useHost();
+  const electronAPI = host?.electronAPI;
   const { t } = useTranslation();
   const [loginLoading, setLoginLoading] = useState(false);
   const [cookiesLoading, setCookiesLoading] = useState(false);
@@ -196,8 +199,8 @@ export default function Cookies() {
   };
 
   const handleRestartApp = () => {
-    if (window.electronAPI && window.electronAPI.restartApp) {
-      window.electronAPI.restartApp();
+    if (electronAPI?.restartApp) {
+      electronAPI.restartApp();
     } else {
       toast.error('Restart function not available');
     }
@@ -222,24 +225,24 @@ export default function Cookies() {
       />
 
       <div className="flex w-full items-center justify-between px-6 pb-6 pt-8">
-        <div className="text-heading-sm font-bold text-text-heading">
+        <div className="text-heading-sm font-bold text-ds-text-neutral-default-default">
           {t('layout.browser-cookie-management')}
         </div>
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="relative flex w-full flex-col rounded-xl border border-border-disabled bg-surface-secondary p-6">
-          <div className="max-w-[600px] text-body-sm text-text-label">
+        <div className="relative flex w-full flex-col rounded-xl border border-ds-border-neutral-muted-disabled bg-ds-bg-neutral-default-default p-6">
+          <div className="max-w-[600px] text-body-sm text-ds-text-neutral-muted-default">
             {t('layout.browser-cookies-description')}
           </div>
-          <div className="mt-4 flex w-full flex-col gap-3 border-[0.5px] border-x-0 border-b-0 border-solid border-border-secondary pt-3">
+          <div className="mt-4 flex w-full flex-col gap-3 border-[0.5px] border-x-0 border-b-0 border-solid border-ds-border-neutral-default-default pt-3">
             <div className="flex flex-row items-center justify-between py-2">
               <div className="flex flex-row items-center justify-start gap-2">
-                <div className="text-body-base font-bold text-text-body">
+                <div className="text-body-base font-bold text-ds-text-neutral-default-default">
                   {t('layout.cookie-domains')}
                 </div>
                 {cookieDomains.length > 0 && (
-                  <div className="rounded-lg bg-tag-fill-info px-2 text-label-sm font-bold text-text-information">
+                  <div className="rounded-lg bg-ds-bg-information-subtle-default px-2 text-label-sm font-bold text-ds-text-information-strong-default">
                     {groupDomainsByMain(cookieDomains).length}
                   </div>
                 )}
@@ -252,7 +255,7 @@ export default function Cookies() {
                     size="sm"
                     onClick={handleDeleteAll}
                     disabled={deletingAll}
-                    className="uppercase !text-text-cuation"
+                    className="uppercase !text-ds-text-status-error-strong-default"
                   >
                     {deletingAll
                       ? t('layout.deleting')
@@ -288,20 +291,21 @@ export default function Cookies() {
                 {groupDomainsByMain(cookieDomains).map((group, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between rounded-xl border-solid border-border-disabled bg-surface-tertiary px-4 py-2"
+                    className="flex items-center justify-between rounded-xl bg-ds-bg-neutral-subtle-default px-4 py-2"
                   >
                     <div className="flex w-full flex-col items-start justify-start">
-                      <span className="truncate text-body-sm font-bold text-text-body">
+                      <span className="truncate text-body-sm font-bold text-ds-text-neutral-default-default">
                         {group.mainDomain}
                       </span>
-                      <span className="mt-1 text-label-xs text-text-label">
+                      <span className="mt-1 text-label-xs text-ds-text-neutral-muted-default">
                         {group.totalCookies} Cookie
                         {group.totalCookies !== 1 ? 's' : ''}
                       </span>
                     </div>
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="xs"
+                      buttonContent="icon-only"
                       onClick={() =>
                         handleDeleteMainDomain(
                           group.mainDomain,
@@ -311,18 +315,18 @@ export default function Cookies() {
                       disabled={deletingDomain === group.mainDomain}
                       className="ml-3 flex-shrink-0"
                     >
-                      <Trash2 className="h-4 w-4 text-text-cuation" />
+                      <Trash2 className="h-4 w-4 text-ds-text-status-error-strong-default" />
                     </Button>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center px-4 py-8">
-                <Cookie className="mb-4 h-12 w-12 text-icon-secondary opacity-50" />
-                <div className="text-body-base text-center font-bold text-text-label">
+                <Cookie className="mb-4 h-12 w-12 text-ds-icon-neutral-muted-default opacity-50" />
+                <div className="text-body-base text-center font-bold text-ds-text-neutral-muted-default">
                   {t('layout.no-cookies-saved-yet')}
                 </div>
-                <p className="text-center text-label-xs font-medium text-text-label">
+                <p className="text-center text-label-xs font-medium text-ds-text-neutral-muted-default">
                   {t('layout.no-cookies-saved-yet-description')}
                 </p>
               </div>
@@ -330,12 +334,12 @@ export default function Cookies() {
           </div>
         </div>
 
-        <div className="w-full text-center text-label-xs text-text-label">
+        <div className="w-full text-center text-label-xs text-ds-text-neutral-muted-default">
           For more information, check out our
           <a
             href={`${SITE_URL}/privacy-policy`}
             target="_blank"
-            className="ml-1 text-text-information underline"
+            className="ml-1 text-ds-text-status-splitting-strong-default underline"
             rel="noreferrer"
           >
             {t('layout.privacy-policy')}

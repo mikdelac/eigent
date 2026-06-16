@@ -32,7 +32,12 @@ export const MarkDown = ({
   pTextSize?: string;
   olPadding?: string;
 }) => {
-  const [displayedContent, setDisplayedContent] = useState('');
+  // When the typewriter is off, seed with the full content so the very first
+  // paint already has it — otherwise the content arrives a tick later (via the
+  // effect below) and any height-animated container measures an empty body.
+  const [displayedContent, setDisplayedContent] = useState(
+    enableTypewriter ? '' : content
+  );
 
   useEffect(() => {
     if (!enableTypewriter) {
@@ -86,30 +91,30 @@ export const MarkDown = ({
         remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => (
-            <h1 className="text-primary mb-1 break-words text-label-sm font-bold">
+            <h1 className="mb-1 break-words text-label-sm font-bold text-ds-text-neutral-default-default">
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-primary mb-1 break-words text-label-sm font-semibold">
+            <h2 className="mb-1 break-words text-label-sm font-semibold text-ds-text-neutral-default-default">
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-primary mb-1 break-words text-label-sm font-medium">
+            <h3 className="mb-1 break-words text-label-sm font-medium text-ds-text-neutral-default-default">
               {children}
             </h3>
           ),
           p: ({ children }) => (
             <p
-              className={`m-0 ${pTextSize} text-primary whitespace-pre-line break-words font-inter text-label-xs font-medium`}
+              className={`m-0 ${pTextSize} whitespace-pre-line break-words font-inter text-label-xs font-medium text-ds-text-neutral-default-default`}
             >
               {children}
             </p>
           ),
           ul: ({ children }) => (
             <ul
-              className={`text-primary mb-1 list-disc pl-4 text-label-xs ${olPadding}`}
+              className={`mb-1 list-disc pl-4 text-label-xs text-ds-text-neutral-default-default ${olPadding}`}
             >
               {children}
             </ul>
@@ -127,7 +132,7 @@ export const MarkDown = ({
           a: ({ children, href }) => (
             <a
               href={href}
-              className="break-all underline hover:text-text-link-hover"
+              className="break-all text-ds-text-neutral-default-default underline hover:text-ds-text-neutral-default-hover"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -145,25 +150,25 @@ export const MarkDown = ({
             </pre>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="text-primary border-l-4 border-border-subtle-strong pl-3 text-xs italic">
+            <blockquote className="border-l-4 border-ds-border-neutral-strong-default pl-3 text-xs italic text-ds-text-neutral-default-default">
               {children}
             </blockquote>
           ),
           strong: ({ children }) => (
-            <strong className="text-primary text-xs font-semibold">
+            <strong className="text-xs font-semibold text-ds-text-neutral-default-default">
               {children}
             </strong>
           ),
           em: ({ children }) => (
-            <em className="text-primary text-xs italic">{children}</em>
+            <em className="text-xs italic text-ds-text-neutral-default-default">
+              {children}
+            </em>
           ),
           table: ({ children }) => (
             <div className="w-full max-w-full overflow-x-auto">
               <table
-                className="mb-4 !table w-full min-w-0"
+                className="mb-4 !table w-full min-w-0 border-collapse border border-ds-border-neutral-default-default"
                 style={{
-                  borderCollapse: 'collapse',
-                  border: '1px solid #d1d5db',
                   borderSpacing: 0,
                 }}
               >
@@ -181,26 +186,12 @@ export const MarkDown = ({
           ),
           tr: ({ children }) => <tr className="!table-row">{children}</tr>,
           th: ({ children }) => (
-            <th
-              className="text-primary !table-cell text-left text-[10px] font-semibold"
-              style={{
-                border: '1px solid #d1d5db',
-                padding: '2px 5px',
-                borderCollapse: 'collapse',
-              }}
-            >
+            <th className="!table-cell border border-ds-border-neutral-default-default px-[5px] py-0.5 text-left text-[10px] font-semibold text-ds-text-neutral-default-default">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td
-              className="text-primary !table-cell text-[10px]"
-              style={{
-                border: '1px solid #d1d5db',
-                padding: '2px 5px',
-                borderCollapse: 'collapse',
-              }}
-            >
+            <td className="!table-cell border border-ds-border-neutral-default-default px-[5px] py-0.5 text-[10px] text-ds-text-neutral-default-default">
               {children}
             </td>
           ),

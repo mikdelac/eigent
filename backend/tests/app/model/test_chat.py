@@ -13,6 +13,8 @@
 # ========= Copyright 2025-2026 @ Eigent.ai All Rights Reserved. =========
 """Unit tests for Chat and AgentModelConfig model configuration."""
 
+from pathlib import Path
+
 from app.model.chat import AgentModelConfig, Chat, NewAgent
 
 
@@ -140,6 +142,11 @@ class TestModelPlatformMapping:
         chat = self._create_chat("grok")
         assert chat.model_platform == "openai-compatible-model"
 
+    def test_chat_maps_nebius_to_openai_compatible_model(self):
+        """Test Chat maps Nebius platform alias correctly."""
+        chat = self._create_chat("nebius")
+        assert chat.model_platform == "openai-compatible-model"
+
     def test_chat_keeps_supported_platforms_unchanged(self):
         """Test Chat keeps native camel-ai platforms unchanged."""
         chat = self._create_chat("mistral")
@@ -150,6 +157,11 @@ class TestModelPlatformMapping:
     def test_agent_model_config_maps_grok_alias(self):
         """Test AgentModelConfig also maps grok alias for per-agent overrides."""
         config = AgentModelConfig(model_platform="grok")
+        assert config.model_platform == "openai-compatible-model"
+
+    def test_agent_model_config_maps_nebius_alias(self):
+        """Test AgentModelConfig also maps Nebius alias."""
+        config = AgentModelConfig(model_platform="nebius")
         assert config.model_platform == "openai-compatible-model"
 
     def test_agent_model_config_keeps_supported_platforms_unchanged(self):
@@ -193,3 +205,61 @@ class TestIsCloud:
 
     def test_is_cloud_false_when_url_missing(self):
         assert not self._chat_with_url(None).is_cloud()
+
+
+class TestFileSavePath:
+    """Tests for Chat file output path compatibility."""
+
+    def _chat(self) -> Chat:
+        return Chat(
+            task_id="task-1",
+            run_id="run-1",
+            project_id="project-1",
+            question="q",
+            email="alice@example.com",
+            user_id="42",
+            model_platform="openai",
+            model_type="gpt-4o",
+            api_key="k",
+        )
+
+    def test_file_save_path_prefers_user_id_root(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+        resolved = Path(self._chat().file_save_path())
+
+        assert resolved == (
+            tmp_path
+            / "eigent"
+            / "user_42"
+            / "project_project-1"
+            / "task_run-1"
+        )
+        assert resolved.exists()
+
+    def test_file_save_path_falls_back_to_legacy_email_root(
+        self, tmp_path, monkeypatch
+    ):
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        legacy_path = (
+            tmp_path / "eigent" / "alice" / "project_project-1" / "task_run-1"
+        )
+        legacy_path.mkdir(parents=True)
+
+        resolved = Path(self._chat().file_save_path())
+
+        assert resolved == legacy_path
+
+    def test_file_save_path_keeps_legacy_root_for_subpaths(
+        self, tmp_path, monkeypatch
+    ):
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        legacy_path = (
+            tmp_path / "eigent" / "alice" / "project_project-1" / "task_run-1"
+        )
+        legacy_path.mkdir(parents=True)
+
+        resolved = Path(self._chat().file_save_path("screenshots"))
+
+        assert resolved == legacy_path / "screenshots"
+        assert resolved.exists()

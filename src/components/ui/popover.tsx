@@ -35,27 +35,29 @@ function resolveStateClasses(
     return {
       wrapper: 'opacity-50 cursor-not-allowed',
       trigger: 'border-transparent',
-      note: 'text-text-label',
+      note: 'text-ds-text-neutral-muted-default',
     };
   }
   if (state === 'error') {
     return {
       wrapper: '',
-      trigger: 'border-input-border-cuation bg-input-bg-default',
-      note: 'text-text-cuation',
+      trigger:
+        'border-ds-border-status-error-default-default bg-ds-bg-neutral-default-default',
+      note: 'text-ds-text-status-error-strong-default',
     };
   }
   if (state === 'success') {
     return {
       wrapper: '',
-      trigger: 'border-input-border-success bg-input-bg-confirm',
-      note: 'text-text-success',
+      trigger:
+        'border-ds-border-status-completed-default-default bg-ds-bg-status-completed-subtle-default',
+      note: 'text-ds-text-status-completed-strong-default',
     };
   }
   return {
     wrapper: '',
     trigger: 'border-transparent',
-    note: 'text-text-label',
+    note: 'text-ds-text-neutral-muted-default',
   };
 }
 
@@ -128,12 +130,17 @@ const PopoverTrigger = React.forwardRef<
     return (
       <div className={cn('w-full', stateCls.wrapper)}>
         {title ? (
-          <div className="mb-1.5 flex items-center gap-1 text-body-sm font-bold text-text-heading">
+          <div className="mb-1.5 flex items-center gap-1 text-body-sm font-bold text-ds-text-neutral-default-default">
             <span>{title}</span>
-            {required && <span className="text-text-body">*</span>}
+            {required && (
+              <span className="text-ds-text-neutral-default-default">*</span>
+            )}
             {tooltip && (
               <TooltipSimple content={tooltip}>
-                <CircleAlert size={16} className="text-icon-primary" />
+                <CircleAlert
+                  size={16}
+                  className="text-ds-icon-neutral-default-default"
+                />
               </TooltipSimple>
             )}
           </div>
@@ -143,35 +150,35 @@ const PopoverTrigger = React.forwardRef<
           disabled={disabled}
           className={cn(
             // Base styles
-            'relative flex w-full items-center justify-between gap-2 rounded-lg border border-solid px-3 text-text-body outline-none transition-all',
+            'relative flex w-full items-center justify-between gap-2 rounded-lg border border-solid px-3 text-ds-text-neutral-default-default outline-none transition-all',
             sizeClasses[size],
             'whitespace-nowrap [&>span]:line-clamp-1',
             // Default state (when no error/success)
-            !state && 'bg-input-bg-default',
+            !state && 'bg-ds-bg-neutral-default-default',
             // Interactive states (only when no error/success state)
             state !== 'error' &&
               state !== 'success' && [
-                'hover:bg-input-bg-hover hover:ring-1 hover:ring-input-border-hover hover:ring-offset-0',
-                'focus-visible:ring-1 focus-visible:ring-input-border-focus focus-visible:ring-offset-0 data-[state=open]:bg-input-bg-input data-[state=open]:ring-1 data-[state=open]:ring-input-border-focus data-[state=open]:ring-offset-0',
+                'hover:bg-ds-bg-neutral-default-hover hover:ring-1 hover:ring-ds-ring-neutral-strong-default hover:ring-offset-0',
+                'focus-visible:ring-1 focus-visible:ring-ds-ring-brand-default-focus focus-visible:ring-offset-0 data-[state=open]:bg-ds-bg-neutral-strong-default data-[state=open]:ring-1 data-[state=open]:ring-ds-ring-brand-default-focus data-[state=open]:ring-offset-0',
               ],
             // Validation states (override defaults)
             stateCls.trigger,
             // Placeholder styling
-            'data-[placeholder]:text-input-label-default/50',
+            'data-[placeholder]:text-ds-text-neutral-muted-default/50',
             className
           )}
           {...props}
         >
           <div className="flex min-w-0 flex-1 items-center gap-2">
             {leadingIcon && (
-              <span className="flex-shrink-0 text-icon-primary">
+              <span className="flex-shrink-0 text-ds-icon-neutral-default-default">
                 {leadingIcon}
               </span>
             )}
             <span className="truncate">{children}</span>
           </div>
           {showChevron && (
-            <ChevronDown className="h-4 w-4 flex-shrink-0 text-icon-primary" />
+            <ChevronDown className="h-4 w-4 flex-shrink-0 text-ds-icon-neutral-default-default" />
           )}
         </PopoverPrimitive.Trigger>
         {note ? (
@@ -267,7 +274,7 @@ const PopoverContent = React.forwardRef<
           onOpenAutoFocus={handleOpenAutoFocus}
           onInteractOutside={handleInteractOutside}
           className={cn(
-            'text-popover-foreground relative z-50 min-w-[8rem] overflow-hidden rounded-lg border border-solid border-transparent bg-input-bg-default shadow-md',
+            'relative z-50 min-w-[8rem] overflow-hidden rounded-lg border border-solid border-transparent bg-ds-bg-neutral-default-default text-ds-text-neutral-default-default shadow-md',
             'origin-[--radix-popover-content-transform-origin] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
             'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
             'w-[var(--radix-popover-trigger-width)]',
@@ -291,9 +298,9 @@ const PopoverItem = React.forwardRef<HTMLDivElement, PopoverItemProps>(
     <div
       ref={ref}
       className={cn(
-        'relative flex w-full cursor-pointer select-none items-center rounded-lg py-1.5 pl-2 pr-8 text-sm outline-none hover:bg-menutabs-fill-hover',
+        'relative flex w-full cursor-pointer select-none items-center rounded-lg py-1.5 pl-2 pr-8 text-sm outline-none hover:bg-ds-bg-neutral-default-hover',
         disabled && 'pointer-events-none opacity-50',
-        selected && 'bg-menutabs-fill-hover',
+        selected && 'bg-ds-bg-neutral-default-hover',
         className
       )}
       {...props}
