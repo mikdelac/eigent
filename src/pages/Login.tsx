@@ -14,7 +14,6 @@
 
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/authStore';
-import { useStackApp } from '@stackframe/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -40,8 +39,6 @@ let lock = false;
 
 export default function Login() {
   const host = useHost();
-  // Always call hooks unconditionally - React Hooks must be called in the same order
-  const _stackApp = useStackApp();
   const {
     setAuth,
     setModelType,
