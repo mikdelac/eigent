@@ -32,13 +32,29 @@ export function getExternalLoginUrl(callbackUrl: string): string {
  * the callback, returns to `${returnOrigin}/login?token=<jwt>`.
  */
 export function getCognitoLoginStartUrl(returnOrigin: string): string {
+  return buildCognitoUrl('login', returnOrigin);
+}
+
+/**
+ * Backend-driven Cognito Hosted UI logout start URL (self-hosted web).
+ * Destroys the Cognito session cookie so the next login prompts for credentials,
+ * then returns the browser to `${returnOrigin}/login`.
+ */
+export function getCognitoLogoutStartUrl(returnOrigin: string): string {
+  return buildCognitoUrl('logout', returnOrigin);
+}
+
+function buildCognitoUrl(
+  action: 'login' | 'logout',
+  returnOrigin: string
+): string {
   const apiBase = (
     import.meta.env.VITE_PROXY_URL ||
     import.meta.env.VITE_BASE_URL ||
     ''
   ).replace(/\/$/, '');
   // Absolute apiBase ignores the base arg; relative ('/api') resolves against origin.
-  const url = new URL(`${apiBase}/api/v1/auth/cognito/login`, returnOrigin);
+  const url = new URL(`${apiBase}/api/v1/auth/cognito/${action}`, returnOrigin);
   url.searchParams.set('redirect', returnOrigin);
   return url.toString();
 }

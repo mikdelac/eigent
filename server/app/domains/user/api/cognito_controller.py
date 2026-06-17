@@ -122,6 +122,18 @@ def cognito_login(redirect: str | None = Query(default=None)):
     return RedirectResponse(cognito.build_authorize_url(state))
 
 
+@router.get("/logout", name="Cognito Logout Redirect")
+def cognito_logout(redirect: str | None = Query(default=None)):
+    """Destroy the Cognito Hosted UI session so the next login prompts for credentials.
+
+    Local app logout only clears the Eigent JWT; without this the pool's session
+    cookie would silently re-authenticate the same user. We send the browser to
+    Cognito's /logout, which clears that cookie and returns to <frontend>/login.
+    """
+    target = _resolve_redirect(redirect)
+    return RedirectResponse(cognito.build_logout_url(f"{target}/login"))
+
+
 @router.get("/callback", name="Cognito Callback")
 def cognito_callback(
     code: str | None = Query(default=None),

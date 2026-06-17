@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/select';
 import useChatStoreAdapter from '@/hooks/useChatStoreAdapter';
 import { useHost } from '@/host';
+import { getCognitoLogoutStartUrl } from '@/pages/loginUtils';
 
 // Self-hosted Cognito mode has no eigent.ai dashboard to manage the account on,
 // so the "Manage" button (which points to SITE_URL/dashboard) is hidden.
@@ -246,6 +247,15 @@ export default function SettingGeneral() {
                 setNeedsBackendRestart(true); // Mark that backend is restarting
 
                 authStore.logout();
+                if (IS_COGNITO_MODE) {
+                  // Local logout only clears the Eigent JWT; we must also destroy the
+                  // Cognito Hosted UI session, otherwise the next login silently
+                  // re-authenticates the same account (no credential prompt).
+                  window.location.assign(
+                    getCognitoLogoutStartUrl(window.location.origin)
+                  );
+                  return;
+                }
                 navigate('/login');
               }}
             >

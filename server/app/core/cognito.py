@@ -91,6 +91,21 @@ def build_authorize_url(state: str) -> str:
     return f"{cfg.authorize_endpoint}?{urlencode(params)}"
 
 
+def build_logout_url(post_logout_redirect: str) -> str:
+    """Build the Cognito Hosted UI logout URL that clears the pool session cookie.
+
+    ``post_logout_redirect`` must exactly match one of the app client's
+    "Allowed sign-out URLs"; Cognito redirects the browser there once the
+    session is destroyed.
+    """
+    cfg = get_config()
+    params = {
+        "client_id": cfg.client_id,
+        "logout_uri": post_logout_redirect,
+    }
+    return f"{cfg.domain.rstrip('/')}/logout?{urlencode(params)}"
+
+
 def exchange_code(code: str) -> dict:
     """Exchange an authorization code for tokens at the Cognito token endpoint.
 
