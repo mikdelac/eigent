@@ -35,6 +35,10 @@ import {
 import useChatStoreAdapter from '@/hooks/useChatStoreAdapter';
 import { useHost } from '@/host';
 
+// Self-hosted Cognito mode has no eigent.ai dashboard to manage the account on,
+// so the "Manage" button (which points to SITE_URL/dashboard) is hidden.
+const IS_COGNITO_MODE = import.meta.env.VITE_AUTH_PROVIDER === 'cognito';
+
 export default function SettingGeneral() {
   const { t } = useTranslation();
   const host = useHost();
@@ -212,20 +216,22 @@ export default function SettingGeneral() {
             </div>
           </div>
           <div className="flex items-center gap-sm">
-            <Button
-              onClick={() => {
-                window.location.href = `${SITE_URL}/dashboard?email=${authStore.email}`;
-              }}
-              variant="primary"
-              textWeight="semibold"
-              buttonContent="text"
-              buttonRadius="lg"
-              tone="neutral"
-              size="sm"
-            >
-              <Settings />
-              {t('setting.manage')}
-            </Button>
+            {!IS_COGNITO_MODE && (
+              <Button
+                onClick={() => {
+                  window.location.href = `${SITE_URL}/dashboard?email=${authStore.email}`;
+                }}
+                variant="primary"
+                textWeight="semibold"
+                buttonContent="text"
+                buttonRadius="lg"
+                tone="neutral"
+                size="sm"
+              >
+                <Settings />
+                {t('setting.manage')}
+              </Button>
+            )}
             <Button
               variant="outline"
               textWeight="semibold"
