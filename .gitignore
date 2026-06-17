@@ -43,6 +43,19 @@ yarn.lock
 .env.production
 .env.development
 client_secret_*.json
+api_keys.txt
+
+# Terraform local state / plans / provider cache (contain secrets)
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/*.tfplan
+
+# Stray curl-to-URL artifact
+/https:/
+
+# Large packaged Odoo addons (build artifacts)
+addons/*.zip
 
 .claude/
 .cursor

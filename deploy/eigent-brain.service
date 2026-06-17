@@ -1,0 +1,23 @@
+[Unit]
+Description=Eigent Brain (backend/)
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/eigent/backend
+Environment=EIGENT_DEPLOYMENT_TYPE=cloud_vm
+Environment=EIGENT_BRAIN_HOST=127.0.0.1
+Environment=EIGENT_BRAIN_PORT=5001
+Environment=EIGENT_WORKSPACE=/home/ubuntu/.eigent/workspace
+Environment=EIGENT_HANDS_BROWSER=false
+Environment=EIGENT_CORS_ORIGINS=https://ai.steamocloud.com,http://localhost:5173,http://127.0.0.1:5173
+ExecStart=/home/ubuntu/.local/bin/uv run uvicorn main:api --host 127.0.0.1 --port 5001
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=600
+
+[Install]
+WantedBy=multi-user.target
