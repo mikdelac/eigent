@@ -26,7 +26,7 @@ from app.agent.listen_chat_agent import ListenChatAgent, logger
 from app.model.chat import AgentModelConfig, Chat
 from app.model.model_platform import (
     patch_azure_cloud_config,
-    patch_bedrock_cloud_config,
+    patch_bedrock_config,
 )
 from app.service.task import ActionCreateAgentData, Agents, get_task_lock
 from app.utils.event_loop_utils import _schedule_async_task
@@ -84,13 +84,14 @@ def agent_model(
         for attr in config_attrs:
             effective_config[attr] = getattr(options, attr)
         extra_params = options.extra_params or {}
-    # Cloud mode: inject default Bedrock region and adjust URL for proxy.
-    if (
-        effective_config.get("model_platform") == "aws-bedrock-converse"
-        and options.is_cloud()
-    ):
-        effective_config["api_url"], extra_params = patch_bedrock_cloud_config(
-            effective_config["api_url"], extra_params
+    # All Bedrock Converse setup (cloud + self-hosted) funnels through the
+    # single config entry point so URL/region handling can't diverge between
+    # the agent and MCP factory code paths.
+    if effective_config.get("model_platform") == "aws-bedrock-converse":
+        effective_config["api_url"], extra_params = patch_bedrock_config(
+            effective_config["api_url"],
+            extra_params,
+            is_cloud=options.is_cloud(),
         )
     # Cloud mode: default api_version for Azure-backed models so AzureOpenAI
     # construction does not blow up when the frontend omits extra_params.

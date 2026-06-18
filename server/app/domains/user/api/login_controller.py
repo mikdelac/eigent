@@ -26,6 +26,7 @@ from app.core import code
 from app.core.database import session
 from app.core.encrypt import password_verify
 from app.core.environment import env
+from app.domains.model_provider.service.managed_models import provision_on_login
 from app.model.user.user import LoginByPasswordIn, LoginResponse, Status, User
 from app.shared.auth import create_access_token, create_refresh_token
 from app.shared.auth.token_blacklist import blacklist_token
@@ -74,6 +75,7 @@ async def auto_login(db_session: Session = Depends(session)) -> LoginResponse:
                 logger.error("Failed to create default admin user", extra={"error": str(e)}, exc_info=True)
                 raise UserException(code.error, _("Failed to create default user"))
 
+    provision_on_login(user.id)
     logger.info("Auto login successful", extra={"user_id": user.id, "email": user.email})
     return LoginResponse(token=create_access_token(user.id), email=user.email)
 
@@ -93,6 +95,7 @@ async def by_password(data: LoginByPasswordIn, db_session: Session = Depends(ses
     if not user.is_active:
         raise UserException(code.error, _("Please activate your account via the email link."))
 
+    provision_on_login(user.id)
     access_token = create_access_token(user.id)
     refresh_token = create_refresh_token(user.id)
     return {

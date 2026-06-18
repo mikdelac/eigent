@@ -31,17 +31,23 @@ from app.agent.tools import get_mcp_tools
 from app.model.chat import Chat
 from app.model.model_platform import (
     patch_azure_cloud_config,
-    patch_bedrock_cloud_config,
+    patch_bedrock_config,
 )
+from app.service.mcp_config import merge_installed_mcp
 from app.service.task import ActionCreateAgentData, Agents, get_task_lock
 from app.utils.file_utils import get_working_directory
 
 
 async def mcp_agent(options: Chat):
     working_directory = get_working_directory(options)
+    # Merge the request's servers with the Brain's local config so the MCP
+    # agent sees the same connectors as the single agent (single source of
+    # truth lives in ~/.eigent/mcp.json).
+    installed_mcp = merge_installed_mcp(options.installed_mcp)
+    mcp_servers = installed_mcp["mcpServers"]
     logger.info(
         f"Creating MCP agent for project: {options.project_id} "
-        f"with {len(options.installed_mcp['mcpServers'])} MCP servers"
+        f"with {len(mcp_servers)} MCP servers"
     )
     message_integration = None
     if remote_sub_agent_enabled(options, working_directory):
@@ -54,9 +60,9 @@ async def mcp_agent(options: Chat):
         *McpSearchToolkit(options.project_id).get_tools(),
     ]
     tool_names = [McpSearchToolkit.toolkit_name()]
-    if len(options.installed_mcp["mcpServers"]) > 0:
+    if len(mcp_servers) > 0:
         try:
-            mcp_tools = await get_mcp_tools(options.installed_mcp)
+            mcp_tools = await get_mcp_tools(installed_mcp)
             logger.info(
                 f"Retrieved {len(mcp_tools)} MCP tools "
                 f"for task {options.project_id}"
@@ -88,10 +94,7 @@ async def mcp_agent(options: Chat):
                 data={
                     "agent_name": Agents.mcp_agent,
                     "agent_id": agent_id,
-                    "tools": [
-                        key
-                        for key in options.installed_mcp["mcpServers"].keys()
-                    ],
+                    "tools": list(mcp_servers.keys()),
                 }
             )
         )
@@ -102,9 +105,9 @@ async def mcp_agent(options: Chat):
         if k not in ["model_platform", "model_type", "api_key", "url"]
     }
     api_url = options.api_url
-    if options.model_platform == "aws-bedrock-converse" and options.is_cloud():
-        api_url, extra_params = patch_bedrock_cloud_config(
-            api_url, extra_params
+    if options.model_platform == "aws-bedrock-converse":
+        api_url, extra_params = patch_bedrock_config(
+            api_url, extra_params, is_cloud=options.is_cloud()
         )
     if options.model_platform == "azure" and options.is_cloud():
         extra_params = patch_azure_cloud_config(extra_params)

@@ -44,6 +44,7 @@ from app.agent.toolkit.web_deploy_toolkit import WebDeployToolkit
 from app.component.environment import env
 from app.hands.interface import IHands
 from app.model.chat import Chat
+from app.service.mcp_config import merge_installed_mcp
 from app.service.task import Agents
 from app.utils.browser_launcher import normalize_cdp_url
 
@@ -176,7 +177,9 @@ def _browser_enabled_tools() -> list[str]:
 
 
 def _mcp_config(options: Chat, hands: IHands | None) -> dict[str, Any] | None:
-    servers = dict((options.installed_mcp or {}).get("mcpServers", {}))
+    # Merge the request's servers with the Brain's local config so the
+    # ~/.eigent/mcp.json store is the single runtime source of truth.
+    servers = dict(merge_installed_mcp(options.installed_mcp)["mcpServers"])
     if not servers:
         return None
 

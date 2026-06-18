@@ -34,6 +34,7 @@ from sqlmodel import Session
 from app.core import cognito
 from app.core.database import session
 from app.core.environment import env, env_not_empty
+from app.domains.model_provider.service.managed_models import provision_on_login
 from app.model.user.user import Status, User
 from app.shared.auth import create_access_token
 from app.shared.auth.user_auth import SECRET_KEY
@@ -174,6 +175,8 @@ def cognito_callback(
 
     if user.status == Status.Block:
         return _error_redirect(redirect, "account_blocked")
+
+    provision_on_login(user.id)
 
     app_token = create_access_token(user.id)
     logger.info("Cognito login successful", extra={"user_id": user.id, "email": user.email})

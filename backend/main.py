@@ -43,6 +43,7 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 from app import api
 from app.component.environment import env
+from app.model.model_platform import patch_bedrock_converse_compat
 from app.router import register_routers
 from app.utils.event_loop_utils import set_main_event_loop
 
@@ -67,6 +68,10 @@ app_logger.info(
 )
 register_routers(api, prefix)
 app_logger.info("All routers loaded successfully")
+
+# Install AWS Bedrock Converse compatibility shims once, process-wide, so the
+# per-agent path stays free of Camel monkeypatching (no-op without Bedrock).
+patch_bedrock_converse_compat()
 
 # Check if debug mode is enabled via environment variable
 if os.environ.get("ENABLE_PYTHON_DEBUG") == "true":

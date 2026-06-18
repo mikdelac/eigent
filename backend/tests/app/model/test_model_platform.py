@@ -15,10 +15,13 @@
 from pydantic import BaseModel
 
 from app.model.model_platform import (
+    BEDROCK_CONVERSE_REGION,
     NormalizedModelPlatform,
     NormalizedOptionalModelPlatform,
     normalize_model_platform,
     normalize_optional_model_platform,
+    patch_bedrock_config,
+    patch_bedrock_converse_compat,
 )
 
 
@@ -52,3 +55,69 @@ def test_normalized_model_platform_type_applies_in_pydantic_model():
 
     assert item.model_platform == "qianfan"
     assert item.optional_model_platform == "openai-compatible-model"
+
+
+def test_patch_bedrock_config_cloud_adds_region_and_bedrock_suffix():
+    api_url, extra = patch_bedrock_config(
+        "https://proxy.example.com", {}, is_cloud=True
+    )
+    assert api_url == "https://proxy.example.com/bedrock"
+    assert extra["region_name"] == BEDROCK_CONVERSE_REGION
+
+
+def test_patch_bedrock_config_cloud_keeps_explicit_region_and_suffix():
+    api_url, extra = patch_bedrock_config(
+        "https://proxy.example.com/bedrock/",
+        {"region_name": "eu-west-1"},
+        is_cloud=True,
+    )
+    assert api_url == "https://proxy.example.com/bedrock/"
+    assert extra["region_name"] == "eu-west-1"
+
+
+def test_patch_bedrock_config_self_hosted_is_passthrough():
+    # Self-hosted region comes from the provider's encrypted_config, carried
+    # in extra_params; the URL must stay untouched (no /bedrock proxy suffix).
+    api_url, extra = patch_bedrock_config(
+        "https://bedrock-runtime.us-east-1.amazonaws.com",
+        {"region_name": "us-east-1"},
+        is_cloud=False,
+    )
+    assert api_url == "https://bedrock-runtime.us-east-1.amazonaws.com"
+    assert extra == {"region_name": "us-east-1"}
+
+
+def test_patch_bedrock_config_does_not_mutate_input():
+    extra_in = {"region_name": "us-east-1"}
+    patch_bedrock_config("https://x", extra_in, is_cloud=True)
+    assert extra_in == {"region_name": "us-east-1"}
+
+
+def test_patch_bedrock_converse_compat_shims_are_installed():
+    patch_bedrock_converse_compat()
+    patch_bedrock_converse_compat()  # idempotent
+
+    from camel.models.aws_bedrock_converse_model import (
+        AWSBedrockConverseModel as M,
+    )
+
+    # Array tool results are wrapped in a JSON object Bedrock accepts.
+    assert M._parse_json_or_text([1, 2]) == {"json": {"result": [1, 2]}}
+    assert M._parse_json_or_text({"a": 1}) == {"json": {"a": 1}}
+
+    # Empty tool descriptions are backfilled from the tool name.
+    class _Fake(M):
+        def __init__(self):
+            pass
+
+    tools = [
+        {
+            "function": {
+                "name": "todo_write",
+                "description": "",
+                "parameters": {"type": "object"},
+            }
+        }
+    ]
+    out = _Fake._convert_openai_tools_to_bedrock(_Fake(), tools)
+    assert out[0]["toolSpec"]["description"] == "todo_write"

@@ -82,6 +82,24 @@ def write_mcp_config(config: dict) -> None:
     )
 
 
+def merge_installed_mcp(installed_mcp: dict | None) -> dict:
+    """Merge the request's MCP servers with the Brain's local config.
+
+    The Brain's ``~/.eigent/mcp.json`` (see :func:`read_mcp_config`) is the
+    runtime source of truth for which connectors are wired up on this host
+    (e.g. Odoo). The chat request may also carry per-request servers in
+    ``installed_mcp``. Returning the union — request servers winning on a key
+    clash — lets the agents use locally-configured connectors even when the
+    request sends an empty ``installed_mcp``, so a single store drives runtime
+    behaviour instead of every caller having to replicate the config.
+    """
+    merged = dict(read_mcp_config().get("mcpServers", {}))
+    request_servers = (installed_mcp or {}).get("mcpServers", {})
+    if isinstance(request_servers, dict):
+        merged.update(request_servers)
+    return {"mcpServers": merged}
+
+
 def add_mcp(name: str, mcp: dict) -> None:
     """Add MCP server to config."""
     config = read_mcp_config()
