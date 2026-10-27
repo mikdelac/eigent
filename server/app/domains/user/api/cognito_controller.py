@@ -164,13 +164,17 @@ def cognito_callback(
             raise ValueError("No id_token in token response")
         claims = cognito.verify_id_token(id_token)
     except Exception as e:
-        logger.error("Cognito token exchange/verify failed", extra={"error": str(e)}, exc_info=True)
+        # loguru ignores exc_info/extra in the log line: put the cause in the message.
+        logger.exception(f"Cognito token exchange/verify failed: {e!r}")
         return _error_redirect(redirect, "auth_failed")
 
     try:
         user = _upsert_user(claims, db_session)
     except Exception as e:
-        logger.error("Cognito user upsert failed", extra={"error": str(e)}, exc_info=True)
+        logger.exception(
+            f"Cognito user upsert failed for cognito:username={claims.get('cognito:username')!r} "
+            f"email={claims.get('email')!r}: {e!r}"
+        )
         return _error_redirect(redirect, "user_error")
 
     if user.status == Status.Block:
